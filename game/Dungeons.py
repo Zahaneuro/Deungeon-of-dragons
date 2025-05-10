@@ -36,7 +36,7 @@ level3 = pygame.image.load('foto/scene/scene3.jpg')
 level4= pygame.image.load('foto/scene/scene4.jpg')
 level5 = pygame.image.load('foto/scene/scene5.png')
 block = pygame.image.load('foto/block/Granite.jpg')
-
+img_bullet = pygame.image.load('foto/bullet.png')
 
 playr = pygame.image.load('foto/playr/playr-removebg-preview.png')
 
@@ -68,6 +68,8 @@ class Player(pygame.sprite.Sprite):
         self.image_left = pygame.transform.flip(self.image_right, True, False)
         self.image = self.image_right
         self.rect = self.image.get_rect(topleft=(x, y))
+        self.direction = "right"
+
 
         self.vel_y = 0
         self.on_ground = False
@@ -80,9 +82,12 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_LEFT]:
             dx = -5
             self.image = self.image_left
+            self.direction = "left"
         if keys[pygame.K_RIGHT]:
             dx = 5
             self.image = self.image_right
+            self.direction = "right"
+
 
 
         if keys[pygame.K_x] and self.on_ground:
@@ -122,7 +127,17 @@ class Player(pygame.sprite.Sprite):
         if self.rect.top > 750:
             self.rect.topleft = (50, 500)
             self.vel_y = 0
+    def fire(self):
+        speed = 10 if self.direction == "right" else -10
+        bullet = Bullet(img_bullet, self.rect.centerx, self.rect.centery, 15, 10, speed)
+        bullets.add(bullet)
 
+bullets = pygame.sprite.Group()
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.transform.scale(end_game, (40, 60))
+        self.rect = self.image.get_rect(topleft=(x, y))
 
 class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y, foto):
@@ -130,7 +145,23 @@ class Platform(pygame.sprite.Sprite):
         self.foto = foto
         self.image = pygame.transform.scale(self.foto, (40, 40))
         self.rect = self.image.get_rect(topleft=(x, y))
+class Spike(pygame.sprite.Sprite):
+    def __init__(self, x, y, foto):
+        super().__init__()
+        self.foto = foto
+        self.image = pygame.transform.scale(self.foto, (40, 40))
+        self.rect = self.image.get_rect(topleft=(x, y))
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, image_surface, x, y, width, height, speed):
+        super().__init__()
+        self.image = pygame.transform.scale(image_surface, (width, height))
+        self.rect = self.image.get_rect(center=(x, y))
+        self.speed = speed
 
+    def update(self):
+        self.rect.x += self.speed  # <-- рухаємо по горизонталі
+        if self.rect.right < 0 or self.rect.left > 1250:
+            self.kill()
 
 def main_menu():
     pygame.mixer.music.stop()
@@ -148,6 +179,7 @@ def main_menu():
             if e.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
         
         pygame.display.update()
 
@@ -166,7 +198,8 @@ def tutorial():
         scr.blit(text_tutor2, (0, 50))
         scr.blit(text_tutor3, (0, 100))
         scr.blit(text_tutor4, (0, 150))        
-        scr.blit(text_tutor5, (0, 200))                
+        scr.blit(text_tutor5, (0, 200)) 
+                       
 
 
         for e in pygame.event.get():
@@ -189,6 +222,7 @@ def scene1():
 
     player = Player(50, 500)
     platforms = pygame.sprite.Group()
+    spikes = pygame.sprite.Group()
     platform_list = [
         Platform(0, 700, block),
         Platform(40, 700, block),
@@ -223,26 +257,39 @@ def scene1():
 
 
     ]
+    spike = [
+        Spike(380, 460, block)
+    ]
     platforms.add(platform_list)
-
-    goal = pygame.Rect(1150, 600, 40, 40)
-
+    spikes.add(spike)
+    goal = Enemy(1190, 590)
+    
     all_sprites = pygame.sprite.Group(player)
     running = True
     while running:
         scr.blit(level1, (0, 0))
         scr.blit(jorj, (250, 630))
-
+        scr.blit(goal.image, goal.rect)
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_SPACE:           
+                    player.fire() 
 
         player.update(platform_list)
+        goal.update(platform_list)
         all_sprites.draw(scr)
+        
         platforms.draw(scr)
-
-        pygame.draw.rect(scr, (200, 200, 200), goal)
+        spikes.draw(scr)
+        bullets.update()
+        bullets.draw(scr)
+        #pygame.draw.rect(scr, (200, 200, 200), goal)
+        if pygame.sprite.spritecollide(player, spikes, False):
+            scene1()
+            return
 
         if player.rect.colliderect(goal):
             scene2()
