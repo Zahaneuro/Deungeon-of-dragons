@@ -20,7 +20,7 @@ WHITE = (255, 255, 255)
 text_tutor1 = font.render('Щиро радий тебе бачити в моєму проекті ', False, 'white')
 text_tutor2 = font.render('коротко раскажу як тут рухатися щоб іти в перед потрібно', False, 'white')
 text_tutor3 = font.render('нажати на стрілку в прово ащо в назад стрілку в ліво ', False, 'white')
-text_tutor4 = font.render('стрибнути потрібно нажати x тепер ти готовий ', False, 'white')
+text_tutor4 = font.render('стрибнути потрібно нажати x стріляти на пробіл тепер ти готовий ', False, 'white')
 text_tutor5 = font.render('переїти в наступний рівень для того нажми Lctrl', False, 'white')
 end_texct = font.render('Вітаю ти дійшов до кінця гри для того щоб вийти зайди в двері', False, 'white')
 
@@ -43,6 +43,7 @@ portal = pygame.image.load('foto/block/Goal_scene31.png')
 gras = pygame.image.load('foto/block/Grass_Tile_Sheet_2.01.png')
 playr = pygame.image.load('foto/playr/playr-removebg-preview.png')
 door = pygame.image.load('foto/block/Door.png')
+vorog = pygame.image.load('foto/playr/Enemy-removebg-preview1.png')
 
 btn_play = pygame.image.load('foto/batton/image.png').convert_alpha()
 btn_exit = pygame.image.load('foto/batton/imageQuti.png').convert_alpha()
@@ -275,7 +276,7 @@ def scene1():
         Spike(640, 270, chp),
         Spike(820, 270, chp)
     ]
-    enemy2 = ShootableEnemy(380, 270, jorj, 30, 30)  # Можна інше зображення
+    enemy2 = ShootableEnemy(380, 220, vorog, 60, 100)  # Можна інше зображення
     enemies = pygame.sprite.Group(enemy2)
 
     platforms.add(platform_list)
@@ -336,7 +337,7 @@ def scene2():
         Platform(0, 700, block),
         Platform(40, 700, block),
         Platform(80, 700, block),
-        #/i///////////////////////
+        #/////////////////////////
         Platform(160, 600, block),
         Platform(200, 600, block),
         Platform(240, 600, block),
@@ -374,6 +375,8 @@ def scene2():
     ]
 
     platforms.add(platform_list)
+    enemy2 = ShootableEnemy(800, 120, vorog, 60, 100)  # Можна інше зображення
+    enemies = pygame.sprite.Group(enemy2)
 
     goal = Enemy(1190, 280, portal, 40, 40)
 
@@ -388,6 +391,9 @@ def scene2():
             if e.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_SPACE:           
+                    player.fire() 
 
 
         player.update(platform_list)
@@ -395,12 +401,19 @@ def scene2():
         all_sprites.draw(scr)
         platforms.draw(scr)
         spikes.draw(scr)
+        enemies.update()
+        enemies.draw(scr)
+        bullets.update()
+        bullets.draw(scr)
 
         #pygame.draw.rect(scr, (200, 200, 200), goal)  
         if pygame.sprite.spritecollide(player, spikes, False):
             scene1()
             return
 
+        if pygame.sprite.spritecollide(player, enemies, False):
+            scene1()
+            return
 
         if player.rect.colliderect(goal):
             running = False
@@ -448,7 +461,9 @@ def scene3():
         Spike(1000,70, chp),
     ]
 
-    goal = Enemy(1080,50, portal, 40, 40)
+    goal = Enemy(1080,40, portal, 40, 40)
+    enemy2 = ShootableEnemy(900, 20, vorog, 60, 100)
+    enemies = pygame.sprite.Group(enemy2)
 
     all_sprites = pygame.sprite.Group(player)
     running = True
@@ -473,11 +488,14 @@ def scene3():
         spikes.draw(scr)
         bullets.update()
         bullets.draw(scr)
-
-
-
-        #pygame.draw.rect(scr, (200, 200, 200), goal)  
+        enemies.update()
+        enemies.draw(scr)
+ 
         if pygame.sprite.spritecollide(player, spikes, False):
+            scene1()
+            return
+
+        if pygame.sprite.spritecollide(player, enemies, False):
             scene1()
             return
 
